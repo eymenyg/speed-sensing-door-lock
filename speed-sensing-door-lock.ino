@@ -1,74 +1,73 @@
-#define ALT_L 2
-#define LFDLA 3
+#define IGN 2  // Ignition (power) state
+#define LFDLA 3 // Left Front Door Lock Actuator state. Unlock - LOW; Lock - 20 ms HIGH, 280 ms LOW. Invert the state using a PNP transistor and a resistive voltage divider.
 #define UNLOCK_RELAY 4
 #define LOCK_RELAY 5
-#define VSS A0
+#define VSS A0 // Vehicle Speed Signal. Analog voltage input from LM2917 output
 
 volatile bool doorLocked = false;
-volatile bool engineRunning = false;
+
+volatile long lfdlaLastChange = 0;
 
 int speed = 0;
-int prevSpeed = 0;
+
+long timeNow = 0;
 
 void setup() {
   // put your setup code here, to run once:
   
-  pinMode(ALT_L, INPUT);
+  pinMode(IGN, INPUT);
   pinMode(LFDLA, INPUT);
   pinMode(UNLOCK_RELAY, OUTPUT);
   pinMode(LOCK_RELAY, OUTPUT);
   pinMode(VSS, INPUT);
 
-  attachInterrupt(digitalPinToInterrupt(ALT_L), engineStoppedISR, FALLING);
-
-  if(digitalRead(ALT_L) == HIGH)
-    engineRunning = true;
-
-  if(digitalRead(LFDLA) == LOW)
-    doorLocked = true;
-
-   speed = analogRead(VSS);
+  attachInterrupt(digitalPinToInterrupt(IGN), ignOffISR, FALLING);
+  attachInterrupt(digitalPinToInterrupt(LFDLA), lfdlaISR, CHANGE);
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if(digitalRead(ALT_L) == HIGH)
-    engineRunning = true;
-  else
-    engineRunning = false;
-
-  if(digitalRead(LFDLA) == LOW)
-    doorLocked = true;
-  else
-    doorLocked = false;
-
-  digitalWrite(LOCK_RELAY, LOW);
   digitalWrite(UNLOCK_RELAY, LOW);
-  
-  if(engineRunning && !doorLocked)
+  digitalWrite(LOCK_RELAY, LOW);
+
+
+  timeNow = millis();
+  if(timeNow - lfdlaLastChange > 300)
   {
-    speed = analogRead(VSS);
-    if(speed >= 250 && speed <= 400) //Check if the speed is high enough. TODO: values
-    {
-      if(speed >= prevSpeed + 20) //Check if we're accelerating or decelerating. TODO: values
-      {
-        digitalWrite(UNLOCK_RELAY, LOW);
-        delay(100);
-        
-        digitalWrite(LOCK_RELAY, HIGH);
-        delay(500);
-        digitalWrite(LOCK_RELAY, LOW);
-      }
-    }
-    prevSpeed = speed;
+    doorLocked = false;
   }
-  
-  delay(1000);
+
+  speed = analogRead(VSS);
+  if(speed >= 512)
+  {
+    if(!doorLocked)
+    {
+      noInterrupts();
+      digitalWrite(LOCK_RELAY, HIGH);
+      delay(500);
+      digitalWrite(LOCK_RELAY, LOW);
+      interrupts();
+    }
+  }
+  delay(500);
 }
 
-void engineStoppedISR()
+void ignOffISR()
 {
-  if(digitalRead(LFDLA) == LOW) //door is locked
+  if(doorLocked)
+  {
+    noInterrupts();
     digitalWrite(UNLOCK_RELAY, HIGH);
+    delay(1000);
+    digitalWrite(UNLOCK_RELAY, LOW);
+    interrupts();
+  }
+}
+
+void lfdlaISR()
+{
+  if(digitalRead(LFDLA) == LOW) // locked
+    doorLocked = true;
+  lfdlaLastChange = millis();
 }
