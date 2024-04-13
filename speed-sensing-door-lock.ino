@@ -50,11 +50,9 @@ void loop() {
   {
     if(!doorLocked)
     {
-      noInterrupts();
       digitalWrite(LOCK_RELAY, HIGH);
       delay(500);
       digitalWrite(LOCK_RELAY, LOW);
-      interrupts();
     }
   }
   delay(500);
@@ -62,6 +60,7 @@ void loop() {
 
 void ignOffISR()
 {
+  digitalWrite(LOCK_RELAY, LOW); // in case we get here while LOCK_RELAY is HIGH. Avoid driving LOCK_RELAY and UNLOCK_RELAY HIGH simultaneously
   noInterrupts();
   if(doorLocked)
   {
