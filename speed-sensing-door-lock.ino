@@ -24,7 +24,7 @@ void setup() {
   pinMode(VSS, INPUT);
 
   attachInterrupt(digitalPinToInterrupt(IGN), ignOffISR, FALLING);
-  attachInterrupt(digitalPinToInterrupt(LFDLA), lfdlaISR, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(LFDLA), lfdlaISR, CHANGE);
 
 }
 
@@ -32,6 +32,11 @@ void loop() {
   // put your main code here, to run repeatedly:
   digitalWrite(UNLOCK_RELAY, LOW);
   digitalWrite(LOCK_RELAY, LOW);
+
+  if(digitalRead(LFDLA) == LOW) // locked
+    doorLocked = true;
+  else
+    doorLocked = false;
 
 
   // timeNow = millis();
@@ -67,11 +72,11 @@ void ignOffISR()
   interrupts();
 }
 
-void lfdlaISR()
-{
-  if(digitalRead(LFDLA) == LOW) // locked
-    doorLocked = true;
-  else
-    doorLocked = false;
-  //lfdlaLastChange = millis();
-}
+// void lfdlaISR()
+// {
+//   if(digitalRead(LFDLA) == LOW) // locked
+//     doorLocked = true;
+//   else
+//     doorLocked = false;
+//   //lfdlaLastChange = millis();
+// }
