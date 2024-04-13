@@ -46,15 +46,13 @@ void loop() {
   // }
 
   speed = analogRead(VSS);
-  if(speed >= 512)
+  if(!doorLocked && speed >= 512)
   {
-    if(!doorLocked)
-    {
-      digitalWrite(LOCK_RELAY, HIGH);
-      delay(500);
-      digitalWrite(LOCK_RELAY, LOW);
-    }
+    digitalWrite(LOCK_RELAY, HIGH);
+    delay(500);
+    digitalWrite(LOCK_RELAY, LOW);
   }
+
   delay(500);
 }
 
