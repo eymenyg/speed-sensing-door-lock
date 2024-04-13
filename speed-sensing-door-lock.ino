@@ -48,6 +48,7 @@ void loop() {
   speed = analogRead(VSS);
   if(!doorLocked && speed >= 512)
   {
+    digitalWrite(UNLOCK_RELAY, LOW); // set unlock_relay LOW before attempting to drive lock_relay HIGH
     digitalWrite(LOCK_RELAY, HIGH);
     delay(500);
     digitalWrite(LOCK_RELAY, LOW);
