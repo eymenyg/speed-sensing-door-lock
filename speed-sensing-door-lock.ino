@@ -78,7 +78,7 @@ void loop() {
   if(checkLockStatus() != 3 && digitalRead(ALT_L) == HIGH) // not all doors are locked and engine running
   {
     speed = analogRead(VSS);
-    if(speed >= 512) // 2.5V, TODO: will be adjusted later
+    if(speed >= 200) // ~1V
       setLock(true);
   }
 }
