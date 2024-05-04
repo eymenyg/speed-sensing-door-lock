@@ -15,8 +15,6 @@ Led statusLED;
 
 // Global variables
 volatile bool engineTurnedoff = false;
-volatile bool frontDoorsLocked = false;
-volatile bool rearDoorsLocked = false;
 int LEDLastSetState = -1;
 int speed = 0;
 const int relayTimer = 400; // how long to keep relays on in milliseconds
@@ -86,19 +84,13 @@ void loop() {
 }
 
 int checkLockStatus() {
-  int doorLockStatus = 0
+  int doorLockStatus = 0;
 
   if(digitalRead(LFDLA) == LOW) // Front doors locked
-  {
-    frontDoorsLocked = true;
     doorLockStatus += 1;
-  }
 
   if(digitalRead(RDLA) == LOW) // Rear doors locked
-  {
-    rearDoorsLocked = true;
     doorLockStatus += 2;
-  }
 
   return doorLockStatus; // 0: all unlocked; 1: front locked, rear unlocked; 2: front unlocked, rear locked, ETACS won't allow so impossible; 3: all locked
 }
