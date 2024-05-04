@@ -14,7 +14,7 @@ Bounce2::Button button = Bounce2::Button();
 Led statusLED;
 
 // Global variables
-volatile bool engineTurnedoff = false;
+volatile bool engineTurnedOff = false;
 int LEDLastSetState = -1;
 int speed = 0;
 const int relayTimer = 400; // how long to keep relays on in milliseconds
@@ -48,7 +48,7 @@ void setup() {
 }
 
 void loop() {
-  if(engineTurnedoff) // ALT_L signal went LOW and flag set by ALT_L_ISR
+  if(engineTurnedOff) // ALT_L signal went LOW and flag set by ALT_L_ISR
   {
     digitalWrite(LOCK_RELAY, LOW);
     digitalWrite(UNLOCK_RELAY, HIGH);
@@ -57,7 +57,7 @@ void loop() {
                            // Assume the worst and consider a post-crash engine stall. Double the normal time to guarantee unlock upon engine stall.
     digitalWrite(UNLOCK_RELAY, LOW);
 
-    engineTurnedoff = false;
+    engineTurnedOff = false;
   }
 
   // Status LED
@@ -130,5 +130,5 @@ void setLock(bool newStatus) { // true: lock; false: unlock
 }
 
 void ALT_L_ISR() {
-  engineTurnedoff = true;
+  engineTurnedOff = true;
 }
