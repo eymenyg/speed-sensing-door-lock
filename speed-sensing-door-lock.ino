@@ -1,4 +1,4 @@
-#include <statusled.h>
+#include "Led.h"
 #include <Bounce2.h>
 
 #define ALT_L 2  // Alternator L (Light) state
@@ -11,7 +11,7 @@
 #define VSS A0 // Vehicle Speed Signal. Analog voltage input from LM2917 output
 
 Bounce2::Button button = Bounce2::Button();
-StatusLedManager slm;
+Led statusLED;
 
 // Global variables
 volatile bool engineTurnedoff = false;
@@ -20,6 +20,7 @@ volatile bool rearDoorsLocked = false;
 int LEDLastSetState = -1;
 int speed = 0;
 const int relayTimer = 400; // how long to keep relays on in milliseconds
+const int LEDTimer = 500; // LED blinking interval in milliseconds
 
 // Function declarations
 int checkLockStatus();
@@ -35,15 +36,15 @@ void setup() {
   pinMode(RDLA, INPUT);
   pinMode(LOCK_RELAY, OUTPUT);
   pinMode(UNLOCK_RELAY, OUTPUT);
-  pinMode(STATUS_LED, OUTPUT);
+  //pinMode(STATUS_LED, OUTPUT);
   pinMode(VSS, INPUT);
 
   button.attach (BUTTON, INPUT);
   button.interval(10); // debounce interval in milliseconds
   button.setPressedState(LOW);
 
-  slm.createStatusLed("lockStatus", STATUS_LED);
-  slm("lockStatus").ledSetStill(LOW); // initialize the LED off
+  statusLED.init(STATUS_LED, LEDTimer);
+  statusLED.setLightOff(); // initialize off
 
   attachInterrupt(digitalPinToInterrupt(ALT_L), ALT_L_ISR, FALLING);
 }
@@ -63,7 +64,7 @@ void loop() {
 
   // Status LED
   setLED(checkLockStatus());
-  slm.process(millis());
+  statusLED.loop();
 
   // Button
   button.update();
@@ -109,15 +110,17 @@ void setLED(int doorLockStatus) {
   switch(doorLockStatus)
   {
     case 0:
-      slm("lockStatus").ledSetBlink(1, 25); // 1s period ; 25% duty cycle
     case 1:
     case 2:
+      statusLED.init(STATUS_LED, LEDTimer);
+      statusLED.startBlinking();
       break;
     case 3:
-      slm("lockStatus").ledSetStill(HIGH); // turn on the LED if doors are locked
+      statusLED.setLightOn(); // turn on the LED if doors are locked
       break;
     default:
-      slm("lockStatus").ledSetBlink(0.5, 50); // 0.5s period ; 50% duty cycle - hopefully never happens
+      statusLED.init(STATUS_LED, LEDTimer/2);
+      statusLED.startBlinking(); // hopefully never happens
   }
 
   LEDLastSetState = doorLockStatus;
